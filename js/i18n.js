@@ -67,7 +67,7 @@ const STR = {
       '<ul><li>พยากรณ์และชั้นข้อมูลแผนที่: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0) รวมแบบจำลองจาก ECMWF, NOAA, DWD, JMA ฯลฯ</li>' +
       '<li>เรดาร์ฝน: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> (ย้อนหลังราว 2 ชม.)</li>' +
       '<li>ภาพดาวเทียม: <a href="https://earthdata.nasa.gov/gibs" target="_blank" rel="noopener">NASA GIBS</a></li>' +
-      '<li>แผนที่ฐาน: © OpenStreetMap, © CARTO</li></ul>' +
+      '<li>แผนที่ฐาน: © Esri, © OpenStreetMap</li></ul>' +
       '<p class="muted">ชั้นข้อมูลแผนที่สร้างจากกริดจุดพยากรณ์ ความละเอียดขึ้นกับระดับซูม เลือก “พื้นที่” เป็นประเทศเพื่อให้ละเอียดขึ้น ข้อมูลใช้เพื่อประกอบการตัดสินใจเท่านั้น</p>',
     close: 'ปิด',
     myLocation: 'ตำแหน่งของฉัน',
@@ -164,7 +164,7 @@ const STR = {
       '<ul><li>Forecasts and map layers: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0), combining ECMWF, NOAA, DWD, JMA and other models</li>' +
       '<li>Rain radar: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> (about 2 h of history)</li>' +
       '<li>Satellite imagery: <a href="https://earthdata.nasa.gov/gibs" target="_blank" rel="noopener">NASA GIBS</a></li>' +
-      '<li>Base map: © OpenStreetMap, © CARTO</li></ul>' +
+      '<li>Base map: © Esri, © OpenStreetMap</li></ul>' +
       '<p class="muted">Map layers are built from a grid of forecast points whose spacing depends on zoom. Pick a country under “Area” for finer detail. For guidance only.</p>',
     close: 'Close',
     myLocation: 'My location',

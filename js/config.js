@@ -10,11 +10,12 @@ export const API = {
   rainviewer: 'https://api.rainviewer.com/public/weather-maps.json',
 };
 
+// Esri Canvas dark-gray basemap (no API key). CARTO now requires a key.
 export const BASEMAP = {
-  base: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
-  labels: 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
-  attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  base: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+  labels: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+  maxNativeZoom: 16,
+  attribution: 'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a> &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors',
 };
 
 // RainViewer free (personal-use) API: past ~2 h of radar, 10-min steps,
@@ -33,7 +34,7 @@ export const RADAR = {
 // NASA GIBS daily true-colour satellite mosaic (no key required).
 // The first layer that loads is used; the next is a fallback.
 export const SATELLITE = {
-  layers: ['VIIRS_SNPP_CorrectedReflectance_TrueColor', 'VIIRS_NOAA20_CorrectedReflectance_TrueColor', 'MODIS_Terra_CorrectedReflectance_TrueColor'],
+  layers: ['VIIRS_NOAA20_CorrectedReflectance_TrueColor', 'MODIS_Terra_CorrectedReflectance_TrueColor', 'VIIRS_SNPP_CorrectedReflectance_TrueColor'],
   url: (layer, date) =>
     `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${layer}/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`,
   maxNativeZoom: 9,

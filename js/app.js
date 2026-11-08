@@ -80,8 +80,8 @@ pane('radarPane', 420);
 pane('particlePane', 440);
 pane('labelPane', 460);
 
-L.tileLayer(BASEMAP.base, { attribution: BASEMAP.attribution, subdomains: 'abcd', maxZoom: 20 }).addTo(map);
-L.tileLayer(BASEMAP.labels, { pane: 'labelPane', subdomains: 'abcd', maxZoom: 20 }).addTo(map);
+L.tileLayer(BASEMAP.base, { attribution: BASEMAP.attribution, maxNativeZoom: BASEMAP.maxNativeZoom, maxZoom: 20 }).addTo(map);
+L.tileLayer(BASEMAP.labels, { pane: 'labelPane', maxNativeZoom: BASEMAP.maxNativeZoom, maxZoom: 20 }).addTo(map);
 
 const heat = new HeatLayer();
 const particles = new ParticleLayer();

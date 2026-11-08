@@ -82,7 +82,7 @@ export const HeatLayer = CanvasLayer.extend({
     const cols = Math.ceil(this._size.x / step) + 1;
     const rows = Math.ceil(this._size.y / step) + 1;
     const { lons, lats } = this._axes(cols, rows, step);
-    const off = this._off || (this._off = document.createElement('canvas'));
+    const off = this._offscreen || (this._offscreen = document.createElement('canvas'));
     off.width = cols;
     off.height = rows;
     const octx = off.getContext('2d');

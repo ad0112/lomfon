@@ -32,7 +32,7 @@ Open http://localhost:8000. After code changes, hard-refresh (Ctrl+F5). The serv
 - The user communicates in Thai; reply in Thai.
 
 ## Status (2026-11-08)
-v1.0 pushed, followed by a fix for the `_off` crash and the basemap. Not yet confirmed against live data in a real browser after that fix — verify first: layer list shows, colour layer + wind particles render, radar animates, tapping the map opens the forecast panel, no console errors.
+v1.0 pushed, followed by a fix for the `_off` crash and the basemap. Verified 2026-11-08 against live data in a browser (localhost): layer list, colour layers (wind/temp/rain), wind particles, radar animation, daily satellite, map tap → forecast panel (all 4 tabs), Thailand area mode — all OK, no console errors. Only a harmless Chrome `willReadFrequently` warning from the particle layer's periodic `getImageData` wipe (don't set `willReadFrequently: true` — it makes every draw CPU-side).
 
 ## Ideas for next steps
 - GitHub Action that fetches GFS (GRIB2) every 6 h and writes a global JSON grid to the repo, for Windy-like global resolution without a server

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>LomFon · ลมฝน — แผนที่ลม ฝน เรดาร์</title>
+  <meta name="description" content="แผนที่อากาศสดทั่วโลก: ลมเคลื่อนไหว เรดาร์ฝน อุณหภูมิ เมฆ และพยากรณ์ 16 วัน เทียบหลายแบบจำลอง">
+  <meta name="theme-color" content="#0b1220">
+  <meta property="og:title" content="LomFon · ลมฝน">
+  <meta property="og:description" content="Live wind, rain radar and 16-day forecasts for anywhere on Earth.">
+  <meta property="og:image" content="icons/icon-512.png">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <!-- icon sprite (Feather-style, MIT) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7.5"/><line x1="20.5" y1="20.5" x2="16.4" y2="16.4"/></symbol>
+      <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.2"/><line x1="12" y1="1.5" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22.5" y2="12"/></symbol>
+      <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></symbol>
+      <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"/></symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></symbol>
+    </defs>
+  </svg>
+
+  <div id="map" aria-label="map"></div>
+  <div id="loadbar" class="loadbar"></div>
+
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="LomFon"><img src="icons/icon.svg" alt="" width="28" height="28"><span>LomFon</span></a>
+    <div class="search glass">
+      <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
+      <input id="searchInput" type="search" autocomplete="off" enterkeyhint="search" data-i18n-ph="searchPh">
+      <ul id="searchResults" class="search-results glass" hidden></ul>
+    </div>
+    <button id="btnLocate" class="icon-btn glass" data-i18n-title="locate"><svg class="ic"><use href="#i-locate"/></svg></button>
+    <button id="btnLayers" class="icon-btn glass only-mobile" data-i18n-title="layers"><svg class="ic"><use href="#i-layers"/></svg></button>
+    <button id="btnMenu" class="icon-btn glass" data-i18n-title="menu"><svg class="ic"><use href="#i-menu"/></svg></button>
+  </header>
+
+  <section id="layerPanel" class="layer-panel glass">
+    <div class="lp-head only-mobile">
+      <strong data-i18n="layers"></strong>
+      <button class="icon-btn sm" data-close="layerPanel" data-i18n-title="close"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div id="layerList" class="lp-list"></div>
+    <div class="lp-sep"></div>
+    <label class="toggle"><input type="checkbox" id="tglParticles"><span class="sl"></span><span data-i18n="particles"></span></label>
+    <label class="toggle"><input type="checkbox" id="tglRadar"><span class="sl"></span><span data-i18n="radar"></span></label>
+    <label class="toggle"><input type="checkbox" id="tglSat"><span class="sl"></span><span data-i18n="satellite"></span></label>
+    <div class="lp-sep"></div>
+    <label class="field"><span data-i18n="model"></span><select id="selModel"></select></label>
+    <label class="field"><span data-i18n="focus"></span><select id="selFocus"></select></label>
+  </section>
+
+  <div id="radarChip" class="chip glass" hidden>
+    <button id="radarPlay" class="icon-btn sm"><svg class="ic"><use href="#i-play"/></svg></button>
+    <span class="dot"></span><span id="radarTime"></span>
+  </div>
+
+  <footer class="timebar glass">
+    <button id="btnPlay" class="icon-btn play" aria-label="play"></button>
+    <div class="tb-main">
+      <div class="tb-label"><span id="timeLabel">–</span> <span id="timeRel" class="muted"></span></div>
+      <div class="tb-slider">
+        <input type="range" id="timeSlider" min="0" max="0" value="0" step="1" aria-label="time">
+        <div id="timeTicks" class="tb-ticks"></div>
+      </div>
+    </div>
+    <div id="legend" class="legend" hidden>
+      <div id="legendTitle" class="legend-title"></div>
+      <div id="legendBar" class="legend-bar"></div>
+      <div id="legendTicks" class="legend-ticks"></div>
+    </div>
+  </footer>
+
+  <div id="hover" class="hover" hidden></div>
+  <aside id="panel" class="panel glass" hidden></aside>
+
+  <div id="settings" class="modal" hidden>
+    <div class="modal-card glass" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <h2 data-i18n="settings"></h2>
+        <button class="icon-btn sm" data-close="settings" data-i18n-title="close"><svg class="ic"><use href="#i-x"/></svg></button>
+      </div>
+      <label class="field"><span data-i18n="language"></span>
+        <select id="selLang"><option value="th">ไทย</option><option value="en">English</option></select></label>
+      <label class="field"><span data-i18n="tempUnit"></span>
+        <select id="selTempUnit"><option value="C">°C</option><option value="F">°F</option></select></label>
+      <label class="field"><span data-i18n="windUnit"></span>
+        <select id="selWindUnit"><option value="kmh">km/h</option><option value="ms">m/s</option><option value="kt">kt</option><option value="mph">mph</option></select></label>
+      <h3 data-i18n="favorites"></h3>
+      <ul id="favList" class="fav-list"></ul>
+      <h3 data-i18n="about"></h3>
+      <div class="about" data-i18n-html="aboutHtml"></div>
+      <p class="muted small" data-i18n="install"></p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>

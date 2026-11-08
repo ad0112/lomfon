@@ -6,6 +6,7 @@ A static weather-map web app in the spirit of Windy and RainViewer. No server, n
 
 ## ฟีเจอร์ / Features
 
+- test
 - **ลมเคลื่อนไหว** (particle animation) บนแผนที่ทั่วโลก
 - **ชั้นข้อมูลสี**: ลม, ลมกระโชก, อุณหภูมิ, ฝน (พยากรณ์), เมฆ, ความชื้น, ความกดอากาศ
 - **ไทม์ไลน์รายชั่วโมง 5 วัน** พร้อมปุ่มเล่นภาพเคลื่อนไหว

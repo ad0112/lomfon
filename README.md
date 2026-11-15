@@ -1,8 +1,8 @@
 # LomFon · ลมฝน
 
-แผนที่อากาศแบบเว็บแอป (แนว Windy + RainViewer) เปิดผ่านลิงก์ได้ทันที ไม่ต้องมีเซิร์ฟเวอร์ ไม่ต้องใช้ API key
+แผนที่อากาศแบบเว็บแอป แสดงลม ฝน และเรดาร์ เปิดผ่านลิงก์ได้ทันที ไม่ต้องมีเซิร์ฟเวอร์
 
-A static weather-map web app in the spirit of Windy and RainViewer. No server, no API keys — deploys straight to GitHub Pages.
+A static weather-map web app showing wind, rain and radar. No server — deploys straight to GitHub Pages.
 
 ## ฟีเจอร์ / Features
 
@@ -60,7 +60,7 @@ sw.js                 service worker (PWA)
 | พยากรณ์, ชั้นข้อมูลแผนที่, AQI, คลื่น | [Open-Meteo](https://open-meteo.com/) (CC BY 4.0) | ใช้ฟรีสำหรับงานไม่เชิงพาณิชย์ มีโควตาเรียกต่อนาที/วัน — ถ้าใช้เชิงพาณิชย์ต้องซื้อ API key |
 | เรดาร์ฝน | [RainViewer](https://www.rainviewer.com/api.html) | ย้อนหลังราว 2 ชม., ทุก 10 นาที, ซูมสูงสุดระดับ 7, สีแบบเดียว, ไม่มีพยากรณ์เรดาร์ |
 | ภาพดาวเทียม | [NASA GIBS](https://earthdata.nasa.gov/gibs) | ภาพรายวัน (ของเมื่อวาน) ไม่ใช่ภาพสด |
-| แผนที่ฐาน | Esri Canvas Dark Gray, © OpenStreetMap | ไม่ต้องใช้ key |
+| แผนที่ฐาน | [Esri](https://www.esri.com/) static basemap tiles (ArcGIS Location Platform) | ใช้ API key ที่ล็อกให้ใช้ได้เฉพาะโดเมนของโปรเจกต์นี้ — ถ้า fork ต้องสร้าง key ของตัวเองแล้วแก้ `ESRI_KEY` ใน `js/config.js` |
 
 ชั้นข้อมูลสีบนแผนที่สร้างจาก "กริดจุดพยากรณ์" ราว 160–220 จุดต่อครั้ง แล้ว interpolate จึงละเอียดน้อยกว่า Windy เมื่อมองทั้งโลก แต่ละเอียดขึ้นเมื่อซูมเข้าหรือเลือกพื้นที่โฟกัส
 

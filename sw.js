@@ -1,6 +1,6 @@
 // LomFon service worker: offline app shell (network-first), cache-first for CDN libraries.
 // Weather data is never cached here, so forecasts are always live.
-const CACHE = 'lomfon-v2';
+const CACHE = 'lomfon-v3';
 const SHELL = [
   './', './index.html', './css/style.css', './manifest.webmanifest',
   './js/app.js', './js/config.js', './js/gfs.js', './js/grid.js', './js/i18n.js', './js/layers.js',

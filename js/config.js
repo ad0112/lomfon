@@ -10,12 +10,21 @@ export const API = {
   rainviewer: 'https://api.rainviewer.com/public/weather-maps.json',
 };
 
-// Esri Canvas dark-gray basemap (no API key). CARTO now requires a key.
+// Esri static basemap tiles (ArcGIS Location Platform). Esri's terms require an API key.
+// This key is meant to be public: it can only read static basemap tiles and only works
+// from the referrers set on it (ad0112.github.io, localhost:8000/8765). It expires on
+// 2027-11-14 — rotate it in the ArcGIS portal (Content → "LomFon basemap") before then.
+const ESRI_KEY =
+  'AAPTaKDjRt7qwc0B-AqK-S0cB6w..hVDgAMSMkhgtzSnq0ey73_tywLeDule6wVOnF0bRqcdAIomUWs740pR7cW8FzNusv6tYDqr3lUZiAjii6MttxVezM6qy-i_kMR5N8kFuYRB5vjcUrt6Q3pQOwvSe1SKW_G5_nnIJok3sDK5l8bMiNJtrcWmhS6hO8QbqK42ZZEJCiKbngf8fq-RYM37_gWJXaYEVWZ_JYErL9ppkwf3taqVeu9TV_VdMZKAjWA7Ma8sb8K2QRFWgvtT0AT1_azr8q8PL';
+const esriTiles = (style) =>
+  `https://static-map-tiles-api.arcgis.com/arcgis/rest/services/static-basemap-tiles-service/v1/${style}/static/tile/{z}/{y}/{x}?token=${ESRI_KEY}`;
 export const BASEMAP = {
-  base: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-  labels: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+  base: esriTiles('arcgis/dark-gray'),
+  labels: esriTiles('arcgis/imagery/labels'), // transparent place names drawn above the colour layer
+  tileSize: 512,
+  zoomOffset: -1,
   maxNativeZoom: 16,
-  attribution: 'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a> &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors',
+  attribution: 'Powered by <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a> &mdash; Esri, TomTom, Garmin, FAO, NOAA, USGS, &copy; OpenStreetMap contributors',
 };
 
 // RainViewer free (personal-use) API: past ~2 h of radar, 10-min steps,
@@ -87,19 +96,20 @@ export const COMPARE_MODELS = ['ecmwf_ifs025', 'gfs_seamless', 'icon_seamless', 
 export const COMPARE_COLORS = ['#ffb86b', '#5ab0ff', '#7ee787', '#ff7b9c', '#c39bff', '#f2e05c'];
 
 // Colour scales: [value (base unit), r, g, b, alpha 0-1]
+// LomFon's own wind palette: indigo (calm) → teal → lime → amber → red → violet (storm)
 const WIND_SCALE = [
-  [0, 98, 113, 183, 0.75],
-  [3, 57, 97, 159, 0.75],
-  [6, 74, 148, 169, 0.75],
-  [9, 77, 141, 123, 0.75],
-  [12, 83, 165, 83, 0.75],
-  [15, 53, 159, 53, 0.75],
-  [18, 167, 157, 81, 0.75],
-  [21, 159, 127, 58, 0.75],
-  [25, 161, 108, 92, 0.75],
-  [30, 129, 58, 78, 0.78],
-  [40, 175, 80, 136, 0.8],
-  [50, 117, 74, 147, 0.8],
+  [0, 38, 52, 110, 0.75],
+  [3, 44, 86, 150, 0.75],
+  [6, 40, 128, 170, 0.75],
+  [9, 38, 166, 160, 0.75],
+  [12, 70, 190, 120, 0.75],
+  [15, 150, 205, 80, 0.75],
+  [18, 220, 205, 70, 0.75],
+  [21, 240, 165, 60, 0.75],
+  [25, 235, 115, 60, 0.75],
+  [30, 215, 65, 75, 0.78],
+  [40, 190, 60, 150, 0.8],
+  [50, 150, 90, 200, 0.8],
 ];
 
 const TEMP_SCALE = [
@@ -153,13 +163,13 @@ const PRESS_SCALE = [
 ];
 
 export const LAYERS = {
-  wind: { field: 'wind_speed_10m', unitType: 'wind', scale: WIND_SCALE, ticks: [0, 5, 10, 15, 20, 30, 40], swatch: '#53a553' },
+  wind: { field: 'wind_speed_10m', unitType: 'wind', scale: WIND_SCALE, ticks: [0, 5, 10, 15, 20, 30, 40], swatch: '#26a6a0' },
   temp: { field: 'temperature_2m', unitType: 'temp', scale: TEMP_SCALE, ticks: [-30, -10, 0, 10, 20, 30, 40], swatch: '#f0aa3c' },
   rain: { field: 'precipitation', unitType: 'precip', scale: RAIN_SCALE, ticks: [0.25, 1, 2, 5, 10, 20, 50], transform: 'sqrt', swatch: '#2878f5' },
   clouds: { field: 'cloud_cover', unitType: 'percent', scale: CLOUD_SCALE, ticks: [0, 25, 50, 75, 100], swatch: '#dfe4ee' },
   humidity: { field: 'relative_humidity_2m', unitType: 'percent', scale: HUM_SCALE, ticks: [0, 25, 50, 75, 100], swatch: '#3c96c8' },
   pressure: { field: 'pressure_msl', unitType: 'pressure', scale: PRESS_SCALE, ticks: [970, 990, 1000, 1013, 1025, 1040], swatch: '#5ab478' },
-  gust: { field: 'wind_gusts_10m', unitType: 'wind', scale: WIND_SCALE, ticks: [0, 5, 10, 15, 20, 30, 40], swatch: '#a79d51' },
+  gust: { field: 'wind_gusts_10m', unitType: 'wind', scale: WIND_SCALE, ticks: [0, 5, 10, 15, 20, 30, 40], swatch: '#dccd46' },
 };
 export const LAYER_ORDER = ['wind', 'temp', 'rain', 'clouds', 'humidity', 'pressure', 'gust', 'none'];
 

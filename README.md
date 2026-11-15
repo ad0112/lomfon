@@ -42,6 +42,7 @@ index.html            หน้าแอป
 css/style.css         สไตล์ (ธีมมืด, รองรับมือถือ)
 js/app.js             ตัวควบคุมหลัก: แผนที่, ไทม์ไลน์, ค้นหา, แชร์, ตั้งค่า
 js/config.js          แหล่งข้อมูล, ชั้นข้อมูล, สเกลสี, รายชื่อประเทศ
+js/gfs.js             กริด GFS ทั่วโลก 0.5° (สร้างโดย GitHub Action ทุก 6 ชม. → branch gfs-data)
 js/grid.js            ดึงกริดพยากรณ์ (Open-Meteo multi-location) + interpolation
 js/layers.js          ชั้น canvas: heatmap สี และอนุภาคลม
 js/radar.js           เรดาร์ RainViewer
@@ -55,6 +56,7 @@ sw.js                 service worker (PWA)
 
 | ข้อมูล | แหล่ง | ข้อจำกัดของรุ่นฟรี |
 |---|---|---|
+| ชั้นข้อมูลแผนที่ทั่วโลก 0.5° | [NOAA GFS](https://registry.opendata.aws/noaa-gfs-bdp-pds/) (public domain) | GitHub Action (`.github/workflows/gfs.yml`) ดึงทุก 6 ชม. แล้วเก็บไว้ที่ branch `gfs-data` — ถ้า fork ต้องแก้ `GFS.url` ใน `js/config.js` |
 | พยากรณ์, ชั้นข้อมูลแผนที่, AQI, คลื่น | [Open-Meteo](https://open-meteo.com/) (CC BY 4.0) | ใช้ฟรีสำหรับงานไม่เชิงพาณิชย์ มีโควตาเรียกต่อนาที/วัน — ถ้าใช้เชิงพาณิชย์ต้องซื้อ API key |
 | เรดาร์ฝน | [RainViewer](https://www.rainviewer.com/api.html) | ย้อนหลังราว 2 ชม., ทุก 10 นาที, ซูมสูงสุดระดับ 7, สีแบบเดียว, ไม่มีพยากรณ์เรดาร์ |
 | ภาพดาวเทียม | [NASA GIBS](https://earthdata.nasa.gov/gibs) | ภาพรายวัน (ของเมื่อวาน) ไม่ใช่ภาพสด |

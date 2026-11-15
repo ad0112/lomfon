@@ -1,0 +1,3 @@
+# locally generated GFS grid (published from the gfs-data branch)
+/data/
+__pycache__/

@@ -1,11 +1,12 @@
 // LomFon — main application.
-import { API, BASEMAP, SATELLITE, GRID, MODELS, LAYERS, LAYER_ORDER, COUNTRIES } from './config.js';
+import { API, BASEMAP, SATELLITE, GRID, GFS, MODELS, LAYERS, LAYER_ORDER, COUNTRIES } from './config.js';
 import { t, setLang, getLang, applyI18n } from './i18n.js';
 import {
   store, units, debounce, ColorScale, convert, unitLabel, fmtValue, fmtTime, HM, compass,
   escapeHtml, normLon, clamp, fetchJSON, qs, icon,
 } from './util.js';
 import { fetchGrid, gridDims } from './grid.js';
+import { loadGfsGrid } from './gfs.js';
 import { HeatLayer, ParticleLayer } from './layers.js';
 import { Radar } from './radar.js';
 import { PointPanel } from './panel.js';
@@ -20,11 +21,13 @@ const state = {
   particles: true,
   radar: false,
   satellite: false,
-  model: 'best_match',
+  model: GFS.id,
   focus: 'WORLD',
   tIndex: 0,
   ...(saved.state || {}),
 };
+// one-time switch to the global GFS grid for settings saved before it existed
+if (!saved.gfs) state.model = GFS.id;
 Object.assign(units, saved.units || {});
 setLang(saved.lang || ((navigator.language || '').toLowerCase().startsWith('th') ? 'th' : 'en'));
 
@@ -49,6 +52,7 @@ function saveSettings() {
   const c = map.getCenter();
   store.set('settings', {
     lang: getLang(),
+    gfs: 1,
     units: { ...units },
     state: { layer: state.layer, particles: state.particles, radar: state.radar, satellite: state.satellite, model: state.model, focus: state.focus },
     view: { lat: +c.lat.toFixed(3), lon: +c.lng.toFixed(3), z: map.getZoom() },
@@ -66,7 +70,7 @@ const map = L.map('map', {
 
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 map.attributionControl.setPrefix(false);
-map.attributionControl.addAttribution('Weather &copy; <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0)');
+map.attributionControl.addAttribution('Weather &copy; <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0), NOAA GFS');
 
 const pane = (name, z) => {
   const p = map.createPane(name);
@@ -145,8 +149,34 @@ function expandBBox(v, pad) {
 
 let gridAbort = null;
 let pendingKey = '';
+let gfsFailed = false; // GFS data set unavailable this session → Open-Meteo instead
+const useGfs = () => state.model === GFS.id && !gfsFailed;
+const gridModel = () => (state.model === GFS.id ? 'best_match' : state.model);
+
+async function ensureGfsGrid(force) {
+  if (grid && grid.model === GFS.id && !force) return;
+  if (pendingKey === GFS.id) return;
+  gridAbort?.abort();
+  const ctl = (gridAbort = new AbortController());
+  pendingKey = GFS.id;
+  loading(1);
+  try {
+    const g = await loadGfsGrid(ctl.signal);
+    if (g !== grid) setGrid(g);
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    gfsFailed = true;
+    toast(t('gfsUnavailable'));
+    if (pendingKey === GFS.id) pendingKey = '';
+    ensureGrid(true);
+  } finally {
+    loading(-1);
+    if (pendingKey === GFS.id) pendingKey = '';
+  }
+}
 
 async function ensureGrid(force = false) {
+  if (useGfs()) return ensureGfsGrid(force);
   const fc = focusCountry();
   let bbox, N;
   if (fc) {
@@ -156,14 +186,14 @@ async function ensureGrid(force = false) {
   } else {
     const v = viewBBox();
     if (
-      !force && grid && !grid.focus && grid.model === state.model && grid.covers(v) &&
+      !force && grid && !grid.focus && grid.model === gridModel() && grid.covers(v) &&
       grid.bbox.e - grid.bbox.w <= 3.2 * Math.max(v.e - v.w, 3) &&
       grid.bbox.n - grid.bbox.s <= 3.2 * Math.max(v.n - v.s, 2)
     ) return;
     bbox = expandBBox(v, 0.25);
     N = GRID.pointsWorld;
   }
-  const key = [state.model, N, bbox.s, bbox.w, bbox.n, bbox.e].map((x) => (typeof x === 'number' ? x.toFixed(2) : x)).join('|');
+  const key = [gridModel(), N, bbox.s, bbox.w, bbox.n, bbox.e].map((x) => (typeof x === 'number' ? x.toFixed(2) : x)).join('|');
   if (!force && grid && grid.key === key) return;
   if (key === pendingKey) return;
   gridAbort?.abort();
@@ -172,7 +202,7 @@ async function ensureGrid(force = false) {
   loading(1);
   try {
     const { nx, ny } = gridDims(bbox, N);
-    const g = await fetchGrid(bbox, state.model, nx, ny, ctl.signal);
+    const g = await fetchGrid(bbox, gridModel(), nx, ny, ctl.signal);
     g.key = key;
     g.focus = !!fc;
     setGrid(g);
@@ -193,6 +223,50 @@ function setGrid(g) {
   updateTicks();
 }
 
+// ---- on-demand frames (GFS grid only: each time step is a separate download)
+function frameFields() {
+  const f = [];
+  if (LAYERS[state.layer]) f.push(LAYERS[state.layer].field);
+  if (state.particles || canHover) f.push('wind_speed_10m');
+  return f;
+}
+
+function redraw() {
+  heat.refresh();
+  particles.refresh();
+  refreshHover();
+}
+
+let lastStaleReload = 0;
+function loadFrame() {
+  const g = grid;
+  if (!g || !g.load) return;
+  const ti = state.tIndex, fields = frameFields();
+  const prefetch = () => {
+    const n = (ti + 1) % g.nt;
+    if (grid === g && !g.has(n, fields)) g.load(n, fields).catch(() => {});
+  };
+  if (g.has(ti, fields)) return prefetch();
+  loading(1);
+  g.load(ti, fields)
+    .then(() => {
+      if (grid === g && state.tIndex === ti) redraw();
+      prefetch();
+    })
+    .catch((e) => {
+      if (grid !== g) return;
+      // files replaced by a newer run → pick up the new manifest (at most once a minute)
+      if (e.status === 404 && Date.now() - lastStaleReload > 60000) {
+        lastStaleReload = Date.now();
+        ensureGrid(true);
+      } else toast(`${t('loadError')}: ${e.message}`);
+    })
+    .finally(() => loading(-1));
+}
+setInterval(() => {
+  if (useGfs() && !document.hidden) ensureGrid(true);
+}, GFS.recheckMs);
+
 // ---------------------------------------------------------------- timeline
 let rafPending = false;
 function setTimeIndex(i) {
@@ -200,13 +274,12 @@ function setTimeIndex(i) {
   state.tIndex = clamp(i, 0, grid.nt - 1);
   $('timeSlider').value = state.tIndex;
   updateTimeLabel();
+  loadFrame();
   if (rafPending) return;
   rafPending = true;
   requestAnimationFrame(() => {
     rafPending = false;
-    heat.refresh();
-    particles.refresh();
-    refreshHover();
+    redraw();
   });
 }
 
@@ -239,7 +312,14 @@ let playTimer = null;
 function setPlaying(on) {
   clearInterval(playTimer);
   playTimer = null;
-  if (on && grid) playTimer = setInterval(() => setTimeIndex((state.tIndex + 1) % grid.nt), 450);
+  if (on && grid) {
+    playTimer = setInterval(() => {
+      const n = (state.tIndex + 1) % grid.nt;
+      // GFS grid: wait for the next frame instead of showing a stale one
+      if (grid.load && !grid.has(n, frameFields())) return void grid.load(n, frameFields()).catch(() => {});
+      setTimeIndex(n);
+    }, 450);
+  }
   $('btnPlay').innerHTML = icon(on ? 'pause' : 'play');
 }
 
@@ -261,6 +341,7 @@ function applyLayer() {
   renderLayerList();
   renderLegend();
   refreshHover();
+  loadFrame();
 }
 
 function renderLayerList() {
@@ -378,6 +459,7 @@ function renderSelects() {
 }
 $('selModel').addEventListener('change', (e) => {
   state.model = e.target.value;
+  gfsFailed = false;
   ensureGrid(true);
   panel.reload();
   persist();
@@ -439,7 +521,7 @@ let marker = null;
 
 const panel = new PointPanel({
   el: $('panel'),
-  getModel: () => state.model,
+  getModel: () => (state.model === GFS.id ? GFS.pointModel : state.model),
   isFav: (lat, lon) => favorites.some((f) => favKey(f.lat, f.lon) === favKey(lat, lon)),
   onToggleFav(lat, lon, name) {
     const k = favKey(lat, lon);

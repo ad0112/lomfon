@@ -58,7 +58,21 @@ export const GRID = {
   pointsFocus: 220, // grid points when a country is focused
 };
 
+// Global 0.5° GFS grid built every 6 h by .github/workflows/gfs.yml (scripts/fetch_gfs.py)
+// and published on the `gfs-data` branch. Locally it is read from ./data/gfs/ instead
+// (run `py scripts/fetch_gfs.py`). The map falls back to Open-Meteo when it is missing.
+export const GFS = {
+  id: 'gfs_grid',
+  url: ['localhost', '127.0.0.1'].includes(location.hostname)
+    ? './data/gfs/'
+    : 'https://raw.githubusercontent.com/ad0112/lomfon/gfs-data/',
+  pointModel: 'gfs_seamless', // Open-Meteo model used by the point panel
+  minHoursAhead: 6, // ignore a data set that ends sooner than this
+  recheckMs: 30 * 60 * 1000,
+};
+
 export const MODELS = [
+  { id: 'gfs_grid', label: { th: 'GFS ทั่วโลก 0.5° (ละเอียด)', en: 'GFS global 0.5° (detailed)' } },
   { id: 'best_match', label: { th: 'อัตโนมัติ (ดีที่สุด)', en: 'Auto (best match)' } },
   { id: 'ecmwf_ifs025', label: { th: 'ECMWF IFS', en: 'ECMWF IFS' } },
   { id: 'gfs_seamless', label: { th: 'NOAA GFS', en: 'NOAA GFS' } },
